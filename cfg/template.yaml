@@ -1,0 +1,36 @@
+# Task
+task: 'Segmentation3DTask'
+
+# General Setting - log path
+exp_name: "experiment name"
+save_dir: "PATH/TO/RESULT/DIR/"
+version: 0
+
+# General Setting - GPU
+gpus: 4
+strategy: "ddp"
+
+# General setting - training parameter
+batch_size: 90
+max_epochs: 2
+learning_rate: 0
+
+# General setting - lightning specific 
+gradient_clip_val: 0.5
+enable_model_summary: False
+limit_train_batches: 1.0
+# Metric to monitor for early stopping and ckpt saving
+# The following metric are always available:
+# ["Val/epoch_avg_loss", "Val/epoch_avg_accuracy", "Train/epoch_avg_loss", "Train/epoch_avg_accuracy"]
+# Of course, there are some more metrics you can monitor or add your own to the train/eval step. 
+monitor_metric: "Val/epoch_avg_loss"
+# The direction of above metric needs to go, i.e. min means you wish the metric go down
+# Choices: "min" or "max"
+monitor_mode: "min"
+# Only save top k epoch's ckpt for above metrics. 
+# Set to -1 if you wish to save every epoch. 
+save_top_k: -1
+# How many epoch the above metric did not change significantly to trigger the early stopping
+# You can set this equal to max_epochs to train for max_epochs 
+patience: 10
+monitor: "Val/epoch_avg_loss"
