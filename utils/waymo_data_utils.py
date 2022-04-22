@@ -5,6 +5,7 @@ import math
 import numpy as np
 import itertools
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 tf.enable_eager_execution()
 
@@ -45,6 +46,7 @@ def get_2d_seg_data(path):
     ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
     ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
     ri2_range_image = range_images[open_dataset.LaserName.TOP][0]
+
     
     ri1_label = convert_to_numpy(ri1_label)
     ri1_range_image = convert_to_numpy(ri1_range_image)
