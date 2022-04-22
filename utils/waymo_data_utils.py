@@ -1,8 +1,10 @@
 import os
+
 import tensorflow.compat.v1 as tf
 import math
 import numpy as np
 import itertools
+from pathlib import Path
 
 tf.enable_eager_execution()
 
@@ -11,15 +13,68 @@ from waymo_open_dataset.utils import transform_utils
 from waymo_open_dataset.utils import  frame_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
+def get_3d_seg_data(path):
+    frame = get_frame_with_lidar_label (path)
+    (range_images, _, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
+    data = {}
+    
+    ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
+    ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
+    ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
+    ri2_range_image = range_images[open_dataset.LaserName.TOP][0]
+    
+    ri1_label = convert_to_numpy(ri1_label)
+    ri1_range_image = convert_to_numpy(ri1_range_image)
+    ri2_label = convert_to_numpy(ri2_label)
+    ri2_range_image = convert_to_numpy(ri2_range_image)
 
-def read_first_frame (path):
-    dataset = tf.data.TFRecordDataset(FILENAME, compression_type='')
+    data['ri1_label'] = ri1_label
+    data['ri1_range_image'] = ri1_range_image
+    data['ri2_label'] = ri2_label
+    data['ri2_range_image'] = ri2_range_image
+    data['legend'] = {'label': ['instance id', 'semantic class'], 'range_image': ['range', 'intensity', 'elongation', '?']}
+    return data
 
-    for data in dataset:
-        frame = open_dataset.Frame()
-        frame.ParseFromString(bytearray(data.numpy()))
-        
-        return frame
+
+def get_2d_seg_data(path):
+    frame = get_frame_with_lidar_label (path)
+    (range_images, camera_projections, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
+    data = {}
+    
+    ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
+    ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
+    ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
+    ri2_range_image = range_images[open_dataset.LaserName.TOP][0]
+    
+    ri1_label = convert_to_numpy(ri1_label)
+    ri1_range_image = convert_to_numpy(ri1_range_image)
+    ri2_label = convert_to_numpy(ri2_label)
+    ri2_range_image = convert_to_numpy(ri2_range_image)
+
+    data['ri1_label'] = ri1_label
+    data['ri1_range_image'] = ri1_range_image
+    data['ri2_label'] = ri2_label
+    data['ri2_range_image'] = ri2_range_image
+    data['legend'] = {'label': ['instance id', 'semantic class'], 'range_image': ['range', 'intensity', 'elongation', '?']}
+    return data
+
+
+def convert_to_numpy (pd_data):
+    tensor = tf.convert_to_tensor(pd_data.data)
+    tensor = tf.reshape(tensor, pd_data.shape.dims)
+    return tensor.numpy()
+
+def get_frame_with_lidar_label (path):
+    path = Path(path)
+    for tfrecord in path.glob('*.tfrecord'):
+        dataset = tf.data.TFRecordDataset(str(tfrecord), compression_type='')
+        for data in dataset:
+            frame = open_dataset.Frame()
+            frame.ParseFromString(bytearray(data.numpy()))
+            if frame.lasers[0].ri_return1.segmentation_label_compressed:
+                break
+        break
+    return frame
 
 def plot_range_image_helper(data, name, layout, vmin = 0, vmax=1, cmap='gray'):
     plt.subplot(*layout)
@@ -27,7 +82,7 @@ def plot_range_image_helper(data, name, layout, vmin = 0, vmax=1, cmap='gray'):
     plt.title(name)
     plt.grid(False)
     plt.axis('off')
-
+    
 
 def get_range_image(frame, laser_name, return_index):
     range_images, camera_projections, seg_labels, range_image_top_pose = frame_utils.parse_range_image_and_camera_projection(frame)

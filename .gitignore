@@ -127,3 +127,5 @@ lightning_logs/
 
 # sandbox
 sandbox
+
+test.py
