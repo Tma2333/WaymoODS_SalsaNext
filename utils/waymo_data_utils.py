@@ -14,6 +14,7 @@ from waymo_open_dataset.utils import transform_utils
 from waymo_open_dataset.utils import  frame_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
+
 def get_3d_seg_data(path):
     frame = get_frame_with_lidar_label (path)
     (range_images, _, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
@@ -22,7 +23,7 @@ def get_3d_seg_data(path):
     ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
     ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
     ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
-    ri2_range_image = range_images[open_dataset.LaserName.TOP][0]
+    ri2_range_image = range_images[open_dataset.LaserName.TOP][1]
     
     ri1_label = convert_to_numpy(ri1_label)
     ri1_range_image = convert_to_numpy(ri1_range_image)
@@ -33,7 +34,7 @@ def get_3d_seg_data(path):
     data['ri1_range_image'] = ri1_range_image
     data['ri2_label'] = ri2_label
     data['ri2_range_image'] = ri2_range_image
-    data['legend'] = {'label': ['instance id', 'semantic class'], 'range_image': ['range', 'intensity', 'elongation', '?']}
+    data['legend'] = {'label': ['instance id', 'semantic class'], 'range_image': ['range', 'intensity', 'elongation', 'is_in_nlz']}
     return data
 
 
@@ -45,19 +46,35 @@ def get_2d_seg_data(path):
     ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
     ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
     ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
-    ri2_range_image = range_images[open_dataset.LaserName.TOP][0]
+    ri2_range_image = range_images[open_dataset.LaserName.TOP][1]
+    ri1_proj = camera_projections[open_dataset.LaserName.TOP][0]
+    ri2_proj = camera_projections[open_dataset.LaserName.TOP][1]
 
     
     ri1_label = convert_to_numpy(ri1_label)
     ri1_range_image = convert_to_numpy(ri1_range_image)
+    ri1_proj = convert_to_numpy(ri1_proj)
+
     ri2_label = convert_to_numpy(ri2_label)
     ri2_range_image = convert_to_numpy(ri2_range_image)
+    ri2_proj = convert_to_numpy(ri2_proj)
+
+    for index, image in enumerate(frame.images):
+        im_data = tf.image.decode_jpeg(image.image).numpy().transpose(2, 0, 1)
+        data['image'] = {index+1: im_data}
+
 
     data['ri1_label'] = ri1_label
     data['ri1_range_image'] = ri1_range_image
+    data['ri1_proj'] = ri1_proj
     data['ri2_label'] = ri2_label
     data['ri2_range_image'] = ri2_range_image
-    data['legend'] = {'label': ['instance id', 'semantic class'], 'range_image': ['range', 'intensity', 'elongation', '?']}
+    data['ri2_proj'] = ri2_proj
+    
+    data['legend'] = {'label': ['instance id', 'semantic class'], 
+                      'range_image': ['range', 'intensity', 'elongation', 'is_in_nlz'],
+                      'image': ['cam id', '(C,H,W)'],
+                      'proj':['first cam id', 'x', 'y', 'second cam id', 'x', 'y']}
     return data
 
 
@@ -65,6 +82,7 @@ def convert_to_numpy (pd_data):
     tensor = tf.convert_to_tensor(pd_data.data)
     tensor = tf.reshape(tensor, pd_data.shape.dims)
     return tensor.numpy()
+
 
 def get_frame_with_lidar_label (path):
     path = Path(path)
@@ -77,6 +95,7 @@ def get_frame_with_lidar_label (path):
                 break
         break
     return frame
+
 
 def plot_range_image_helper(data, name, layout, vmin = 0, vmax=1, cmap='gray'):
     plt.subplot(*layout)
