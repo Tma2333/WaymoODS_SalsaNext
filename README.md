@@ -97,32 +97,32 @@ You can use `download_data.py` to help you download and extract the data you wan
 
 downlaod segment 0 in testing split:
 ```
-python download_data.py --des PATH/TO/DES --split testing --id 0
+python download_data.py download --des PATH/TO/DES --split testing --seg_id 0
 ```
 
 downlaod mutiple segments in validation split:
 ```
-python download_data.py --des PATH/TO/DES --split validation --id '[0 1 2]'
+python download_data.py download --des PATH/TO/DES --split validation --seg_id '[0 1 2]'
 ```
 
 downlaod all segments in training split:
 ```
-python download_data.py --des PATH/TO/DES --split training --id -1
+python download_data.py download --des PATH/TO/DES --split training --seg_id -1
 ```
 
 downlaod segment 0 in both training and validation split:
 ```
-python download_data.py --des PATH/TO/DES --split '[training, validation]' --id '[0, 0]'
+python download_data.py download --des PATH/TO/DES --split '[training, validation]' --seg_id '[0, 0]'
 ```
 
 downlaod mutiple segments in both training and validation split:
 ```
-python download_data.py --des PATH/TO/DES --split '[training, validation]' --id '[[0,1,2], [0,1,2]]'
+python download_data.py download --des PATH/TO/DES --split '[training, validation]' --seg_id '[[0,1,2], [0,1,2]]'
 ```
 
 downlaod all segments in all split:
 ```
-python download_data.py --des PATH/TO/DES --split '[training, validation, testing]' --id '[-1, -1, -1]'
+python download_data.py download --des PATH/TO/DES --split '[training, validation, testing]' --seg_id '[-1, -1, -1]'
 ```
 
 
