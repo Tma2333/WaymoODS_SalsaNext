@@ -59,9 +59,10 @@ def get_2d_seg_data(path):
     ri2_range_image = convert_to_numpy(ri2_range_image)
     ri2_proj = convert_to_numpy(ri2_proj)
 
+    data['image'] = {}
     for index, image in enumerate(frame.images):
         im_data = tf.image.decode_jpeg(image.image).numpy().transpose(2, 0, 1)
-        data['image'] = {index+1: im_data}
+        data['image'][image.name] = im_data
 
 
     data['ri1_label'] = ri1_label
@@ -97,35 +98,127 @@ def get_frame_with_lidar_label (path):
     return frame
 
 
-def plot_range_image_helper(data, name, layout, vmin = 0, vmax=1, cmap='gray'):
-    plt.subplot(*layout)
-    plt.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
-    plt.title(name)
-    plt.grid(False)
-    plt.axis('off')
-    
+def plot_range_image_helper(data, vmin=0, vmax=1, cmap='gray', name=None, fig=None, layout=None):
+    if fig is None:
+        fig = plt.figure(figsize=(200,5))
+    if layout is None:
+        layout = (1,1,1)
+    ax = fig.add_subplot(*layout)
+    ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
+    if name is not None:
+        ax.set_title(name)
+        ax.title.set_fontsize(40)
+    ax.axis('off')
 
-def get_range_image(frame, laser_name, return_index):
-    range_images, camera_projections, seg_labels, range_image_top_pose = frame_utils.parse_range_image_and_camera_projection(frame)
-    return range_images[laser_name][return_index]
+
+def show_range_image_data (data, cmap='gray'):
+    ri1_range_image = data['ri1_range_image']
+    ri2_range_iamge = data['ri2_range_image']
+    data_name = data['legend']['range_image']
+
+    fig = plt.figure(figsize=(200, 6*6))
+    for i, range_image in enumerate((ri1_range_image, ri2_range_iamge)):
+        title_base = f'ri{i}_'
+        for j in range(3):
+            image_data = range_image[..., j]
+            image_data[image_data < 0] = 1e10
+            name = data_name[j]
+            if name == 'range':
+                vmax = 75
+            else:
+                vmax = 1.5
+            plot_range_image_helper(image_data, vmax=vmax, cmap=cmap, name=title_base+name, fig=fig, layout=(6,1,i*3+j+1))
+    plt.tight_layout()
 
 
-def show_range_image(range_image, layout_index_start = 1):
-    range_image_tensor = tf.convert_to_tensor(range_image.data)
-    range_image_tensor = tf.reshape(range_image_tensor, range_image.shape.dims)
-    lidar_image_mask = tf.greater_equal(range_image_tensor, 0)
-    range_image_tensor = tf.where(lidar_image_mask, range_image_tensor,
-                                    tf.ones_like(range_image_tensor) * 1e10)
-    range_image_range = range_image_tensor[...,0] 
-    range_image_intensity = range_image_tensor[...,1]
-    range_image_elongation = range_image_tensor[...,2]
-    plot_range_image_helper(range_image_range.numpy(), 'range',
-                    [8, 1, layout_index_start], vmax=75, cmap='gray')
-    plot_range_image_helper(range_image_intensity.numpy(), 'intensity',
-                    [8, 1, layout_index_start + 1], vmax=1.5, cmap='gray')
-    plot_range_image_helper(range_image_elongation.numpy(), 'elongation',
-                    [8, 1, layout_index_start + 2], vmax=1.5, cmap='gray')
-    frame.lasers.sort(key=lambda laser: laser.name)
-    show_range_image(get_range_image(open_dataset.LaserName.TOP, 0), 1)
-    show_range_image(get_range_image(open_dataset.LaserName.TOP, 1), 4)
+def show_range_image_label (data):
+    ri1_label = data['ri1_label']
+    ri2_label = data['ri2_label']
+
+    fig = plt.figure(figsize=(200, 6*4))
+    for i, label in enumerate((ri1_label, ri2_label)):
+        title_base = f'ri{i}_'
+        instance_id = label[..., 0]
+        semantic_label = label[..., 1]
+
+        plot_range_image_helper(instance_id, vmin=-1, vmax=200, cmap='Paired', 
+                name=title_base+'instance id', fig=fig, layout=(6,1,i*2+1))
+        plot_range_image_helper(semantic_label, vmin=0, vmax=22, cmap='tab20', 
+                name=title_base+'semantic label', fig=fig, layout=(6,1,i*2+2))
+    plt.tight_layout()
+
+
+def show_proj_region (data):
+    ri1_proj = data['ri1_proj']
+    ri2_proj = data['ri2_proj']
+
+    fig = plt.figure(figsize=(200, 6*4))
+    for i, proj in enumerate((ri1_proj, ri2_proj)):
+        title_base = f'ri{i}_'
+        pj_cam1 = proj[..., 0]
+        pj_cam2 = proj[..., 3]
+
+        plot_range_image_helper(pj_cam1, vmin=0, vmax=5, cmap='Paired', 
+                name=title_base+'first cam match', fig=fig, layout=(4,1,i*2+1))
+        plot_range_image_helper(pj_cam2, vmin=0, vmax=5, cmap='Paired', 
+                name=title_base+'second cam match', fig=fig, layout=(4,1,i*2+2))
+    plt.tight_layout()
+        
+
+def plot_image_helper (data, name=None, fig=None, layout=None):
+    if fig is None:
+        fig = plt.figure(figsize=(200,5))
+    if layout is None:
+        layout = (1,1,1)
+    ax = fig.add_subplot(*layout)
+    ax.imshow(data)
+    if name is not None:
+        ax.set_title(name)
+        ax.title.set_fontsize(16)
+    ax.axis('off')
+
+
+def show_images (data):
+    images = data['image']
+
+    fig = plt.figure(figsize=(30, 20))
+    for cam_id, image in images.items():
+        im = image.transpose(1, 2, 0)
+        plot_image_helper(im, name=f'cam_{cam_id}', fig=fig, layout=(2, 3,cam_id))
+    plt.tight_layout()
+
+
+def show_projected_pixel (data):
+    ri1_proj = data['ri1_proj']
+    ri2_proj = data['ri2_proj']
+    images = data['image']
+
+    H, W, _ = ri1_proj.shape
+
+    ri1_pixel = np.zeros((H, W, 3))
+    ri2_pixel = np.zeros((H, W, 3))
+
+
+    for cam_id in range(1, 6):
+        col, row = ri1_proj[ri1_proj[...,  0]==cam_id][..., [1,2]].T
+        ri1_pixel[ri1_proj[...,  0]==cam_id] = images[cam_id][:, row, col].T
+        
+        col, row = ri2_proj[ri2_proj[...,  0]==cam_id][..., [1,2]].T
+        ri2_pixel[ri2_proj[...,  0]==cam_id] = images[cam_id][:, row, col].T
+
+
+    fig = plt.figure(figsize=(200, 6*2))
+    ax = fig.add_subplot(2, 1, 1)
+    ax.imshow(ri1_pixel.astype('int'))
+    ax.set_title('ri1 projected pixel')
+    ax.axis('off')
+    ax.title.set_fontsize(40)
+    ax = fig.add_subplot(2, 1, 2)
+    ax.imshow(ri2_pixel.astype('int'))
+    ax.set_title('ri2 projected pixel')
+    ax.axis('off')
+    ax.title.set_fontsize(40)
+    plt.tight_layout()
+
+
 
