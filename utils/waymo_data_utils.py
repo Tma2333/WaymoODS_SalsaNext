@@ -15,8 +15,11 @@ from waymo_open_dataset.utils import  frame_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
 
-def get_3d_seg_data(path):
-    frame = get_frame_with_lidar_label (path)
+def get_3d_seg_data(path=None, frame=None):
+    if frame is None:
+        if path is None:
+            raise ValueError('When frame is None, the path to directory containt *.tfrecord must be specify')
+        frame = get_frame_with_lidar_label(path)
     (range_images, _, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
     data = {}
     
@@ -38,8 +41,11 @@ def get_3d_seg_data(path):
     return data
 
 
-def get_2d_seg_data(path):
-    frame = get_frame_with_lidar_label (path)
+def get_2d_seg_data(path=None, frame=None):
+    if frame is None:
+        if path is None:
+            raise ValueError('When frame is None, the path to directory containt *.tfrecord must be specify')
+        frame = get_frame_with_lidar_label(path)
     (range_images, camera_projections, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
     data = {}
     
