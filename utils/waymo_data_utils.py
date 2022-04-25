@@ -221,4 +221,20 @@ def show_projected_pixel (data):
     plt.tight_layout()
 
 
+def extract_3d_seg_frames (path, txt_path):
+    path = Path(path)
+    txt_path = Path(txt_path)
 
+    with open(str(txt_path), 'w') as f:
+        for tfrecord in path.glob('*.tfrecord'):
+            print(f'process {tfrecord}')
+            dataset = tf.data.TFRecordDataset(str(tfrecord), compression_type='')
+            for data in dataset:
+                frame = open_dataset.Frame()
+                frame.ParseFromString(bytearray(data.numpy()))
+                if frame.lasers[0].ri_return1.segmentation_label_compressed:
+                    context = frame.context.name
+                    timestamp = frame.timestamp_micros
+                    write_string = f'{context},{timestamp}\n'
+                    f.write(write_string)
+                    # print(f'segment-{context}_with_camera_labels.tfrecord' == tfrecord.name)
