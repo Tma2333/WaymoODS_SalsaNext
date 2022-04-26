@@ -15,8 +15,11 @@ from waymo_open_dataset.utils import  frame_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
 
-def get_3d_seg_data(path):
-    frame = get_frame_with_lidar_label (path)
+def get_3d_seg_data(path=None, frame=None):
+    if frame is None:
+        if path is None:
+            raise ValueError('When frame is None, the path to directory containt *.tfrecord must be specify')
+        frame = get_frame_with_lidar_label(path)
     (range_images, _, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
     data = {}
     
@@ -38,8 +41,11 @@ def get_3d_seg_data(path):
     return data
 
 
-def get_2d_seg_data(path):
-    frame = get_frame_with_lidar_label (path)
+def get_2d_seg_data(path=None, frame=None):
+    if frame is None:
+        if path is None:
+            raise ValueError('When frame is None, the path to directory containt *.tfrecord must be specify')
+        frame = get_frame_with_lidar_label(path)
     (range_images, camera_projections, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
     data = {}
     
@@ -225,6 +231,7 @@ def show_projected_pixel (data):
     plt.tight_layout()
 
 
+<<<<<<< HEAD
 def show_labels_on_image (data):
     """
     Projects the labels from the Lidar range images onto the visual images
@@ -281,3 +288,22 @@ def plot_labeled_image(image):
 
 
 
+=======
+def extract_3d_seg_frames (path, txt_path):
+    path = Path(path)
+    txt_path = Path(txt_path)
+
+    with open(str(txt_path), 'w') as f:
+        for tfrecord in path.glob('*.tfrecord'):
+            print(f'process {tfrecord}')
+            dataset = tf.data.TFRecordDataset(str(tfrecord), compression_type='')
+            for data in dataset:
+                frame = open_dataset.Frame()
+                frame.ParseFromString(bytearray(data.numpy()))
+                if frame.lasers[0].ri_return1.segmentation_label_compressed:
+                    context = frame.context.name
+                    timestamp = frame.timestamp_micros
+                    write_string = f'{context},{timestamp}\n'
+                    f.write(write_string)
+                    # print(f'segment-{context}_with_camera_labels.tfrecord' == tfrecord.name)
+>>>>>>> 32b972750936acb361c7df44e1eae017f5b6af26

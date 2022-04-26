@@ -6,7 +6,7 @@ import tarfile
 NUM_SEG = {'training': 32, 'validation': 8, 'testing': 8}
 AVAILABLE_SPLIT = list(NUM_SEG.keys())
 
-def download_segment (urls: List[str], des: [Union[str, os.PathLike]]):
+def download_segment (urls: List[str], des: Union[str, os.PathLike]):
     des = Path(des)
     des.mkdir(parents=True, exist_ok=True)
 
@@ -22,9 +22,8 @@ def download_segment (urls: List[str], des: [Union[str, os.PathLike]]):
         else:
             flag = 1
             print(f'{file_name} already downloaded')
-        if flag == 0:
-            print(f'Something went wrong downloading {url}')
-        else:
+
+        if file_loc.exists():
             (des/split).mkdir(parents=True, exist_ok=True)
             with tarfile.open(str(file_loc)) as tar:
                 print(f'Extract {file_name} to {des/split}')
