@@ -11,11 +11,11 @@ tf.enable_eager_execution()
 
 from waymo_open_dataset.utils import range_image_utils
 from waymo_open_dataset.utils import transform_utils
-from waymo_open_dataset.utils import  frame_utils
+from waymo_open_dataset.utils import frame_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
 
-def get_3d_seg_data(path=None, frame=None):
+def get_3d_seg_data(path=None, frame=None, test=False):
     if frame is None:
         if path is None:
             raise ValueError('When frame is None, the path to directory containt *.tfrecord must be specify')
@@ -23,25 +23,29 @@ def get_3d_seg_data(path=None, frame=None):
     (range_images, _, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
     data = {}
     
-    ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
-    ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
+    if not test:
+        ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
+        ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
     ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
     ri2_range_image = range_images[open_dataset.LaserName.TOP][1]
     
-    ri1_label = convert_to_numpy(ri1_label)
+    if not test:
+        ri1_label = convert_to_numpy(ri1_label)
+        ri2_label = convert_to_numpy(ri2_label)
     ri1_range_image = convert_to_numpy(ri1_range_image)
-    ri2_label = convert_to_numpy(ri2_label)
     ri2_range_image = convert_to_numpy(ri2_range_image)
 
-    data['ri1_label'] = ri1_label
+    if not test:
+        data['ri1_label'] = ri1_label
+        data['ri2_label'] = ri2_label
+
     data['ri1_range_image'] = ri1_range_image
-    data['ri2_label'] = ri2_label
     data['ri2_range_image'] = ri2_range_image
     data['legend'] = {'label': ['instance id', 'semantic class'], 'range_image': ['range', 'intensity', 'elongation', 'is_in_nlz']}
     return data
 
 
-def get_2d_seg_data(path=None, frame=None):
+def get_2d_seg_data(path=None, frame=None, test=False):
     if frame is None:
         if path is None:
             raise ValueError('When frame is None, the path to directory containt *.tfrecord must be specify')
@@ -49,19 +53,22 @@ def get_2d_seg_data(path=None, frame=None):
     (range_images, camera_projections, segmentation_labels, _) = frame_utils.parse_range_image_and_camera_projection(frame)
     data = {}
     
-    ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
-    ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
+    if not test:
+        ri1_label = segmentation_labels[open_dataset.LaserName.TOP][0]
+        ri2_label = segmentation_labels[open_dataset.LaserName.TOP][1]
+        
     ri1_range_image = range_images[open_dataset.LaserName.TOP][0]
     ri2_range_image = range_images[open_dataset.LaserName.TOP][1]
     ri1_proj = camera_projections[open_dataset.LaserName.TOP][0]
     ri2_proj = camera_projections[open_dataset.LaserName.TOP][1]
 
-    
-    ri1_label = convert_to_numpy(ri1_label)
+    if not test:
+        ri1_label = convert_to_numpy(ri1_label)
+        ri2_label = convert_to_numpy(ri2_label)
+
     ri1_range_image = convert_to_numpy(ri1_range_image)
     ri1_proj = convert_to_numpy(ri1_proj)
 
-    ri2_label = convert_to_numpy(ri2_label)
     ri2_range_image = convert_to_numpy(ri2_range_image)
     ri2_proj = convert_to_numpy(ri2_proj)
 
@@ -70,11 +77,12 @@ def get_2d_seg_data(path=None, frame=None):
         im_data = tf.image.decode_jpeg(image.image).numpy().transpose(2, 0, 1)
         data['image'][image.name] = im_data
 
+    if not test:
+        data['ri1_label'] = ri1_label
+        data['ri2_label'] = ri2_label
 
-    data['ri1_label'] = ri1_label
     data['ri1_range_image'] = ri1_range_image
     data['ri1_proj'] = ri1_proj
-    data['ri2_label'] = ri2_label
     data['ri2_range_image'] = ri2_range_image
     data['ri2_proj'] = ri2_proj
     
@@ -194,16 +202,11 @@ def show_images (data):
     plt.tight_layout()
 
 
-def show_projected_pixel (data):
-    ri1_proj = data['ri1_proj']
-    ri2_proj = data['ri2_proj']
-    images = data['image']
-
+def make_projected_pixel_im (ri1_proj, ri2_proj, images):
     H, W, _ = ri1_proj.shape
 
     ri1_pixel = np.zeros((H, W, 3))
     ri2_pixel = np.zeros((H, W, 3))
-
 
     for cam_id in range(1, 6):
         col, row = ri1_proj[ri1_proj[...,  0]==cam_id][..., [1,2]].T
@@ -211,7 +214,16 @@ def show_projected_pixel (data):
         
         col, row = ri2_proj[ri2_proj[...,  0]==cam_id][..., [1,2]].T
         ri2_pixel[ri2_proj[...,  0]==cam_id] = images[cam_id][:, row, col].T
+    
+    return ri1_pixel, ri2_pixel
 
+
+def show_projected_pixel (data):
+    ri1_proj = data['ri1_proj']
+    ri2_proj = data['ri2_proj']
+    images = data['image']
+
+    ri1_pixel, ri2_pixel = make_projected_pixel_im(ri1_proj, ri2_proj, images)
 
     fig = plt.figure(figsize=(200, 6*2))
     ax = fig.add_subplot(2, 1, 1)
@@ -243,4 +255,3 @@ def extract_3d_seg_frames (path, txt_path):
                     timestamp = frame.timestamp_micros
                     write_string = f'{context},{timestamp}\n'
                     f.write(write_string)
-                    # print(f'segment-{context}_with_camera_labels.tfrecord' == tfrecord.name)
