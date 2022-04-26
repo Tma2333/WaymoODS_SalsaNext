@@ -125,4 +125,48 @@ downlaod all segments in all split:
 python download_data.py download --des PATH/TO/DES --split '[training, validation, testing]' --seg_id '[-1, -1, -1]'
 ```
 
+# Data format
+## Extract frames has segmentation label
+Extract frames with segmentation label use the following code::
+```
+data_dir = 'PATH/TO/DATA/SPLIT/DIR'
+path_txt = 'PATH/TO/EXTRACT/FRAME/TXT'
 
+extract_3d_seg_frames(data_dir, path_txt)
+```
+You con find extracted frame txt file in `docs/`. `3d_semseg_test_set_frames.txt` provided by Waymo.
+
+Each lines frame txt file of has the following format:
+```
+{context id},{timestamp}
+ex:
+2830680430134047327_1720_000_1740_000,1558034229922468
+```
+
+## Convert tfrecord to hdf5 format
+Conversion can be done using the following code:
+```
+from utils import *
+
+h5_path = 'PATH/TO/H5/FILE'
+txt_path = 'PATH/TO/EXTRACT/FRAME/TXT'
+data_dir = 'PATH/TO/DATA/SPLIT/DIR'
+
+tfrecord_to_h5(txt_path, h5_path, data_dir)
+```
+Only frames with segmentation data will be converted, the hdf5 file has the following structure:
+```
+<HDF5 dataset "image": shape (None, 5, 800000), type "|u1">
+<HDF5 dataset "image_length": shape (None, 5), type "<i4">
+<HDF5 dataset "proj_pixel": shape (None, 3, 64, 2650), type "|u1">
+<HDF5 group "/label" (2 members)>
+    <HDF5 dataset "ri1": shape (None, 2, 64, 2650), type "<i4">
+    <HDF5 dataset "ri2": shape (None, 2, 64, 2650), type "<i4">
+proj <HDF5 group "/proj" (2 members)>
+    <HDF5 dataset "ri1": shape (None, 6, 64, 2650), type "<i4">
+    <HDF5 dataset "ri2": shape (None, 6, 64, 2650), type "<i4">
+range_image <HDF5 group "/range_image" (2 members)>
+    <HDF5 dataset "ri1": shape (None, 4, 64, 2650), type "<f4">
+    <HDF5 dataset "ri2": shape (None, 4, 64, 2650), type "<f4">
+```
+See how to extract these data in `get_data_h5` in `/utils/h5_data_utils.py`
