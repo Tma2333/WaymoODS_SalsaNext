@@ -6,7 +6,7 @@ import torchvision.transforms as T
 import numpy as np
 
 
-class WaymoDataset(torch.utils.data.Dataset):
+class H5Dataset(torch.utils.data.Dataset):
     def __init__ (self,):
         raise NotImplementedError
 
@@ -17,3 +17,7 @@ class WaymoDataset(torch.utils.data.Dataset):
 
     def __getitem__ (self, index):
         raise NotImplementedError
+    
+
+    def get_data (self, path, ):
+        pass
