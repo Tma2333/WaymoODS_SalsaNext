@@ -31,8 +31,6 @@ def download_segment (urls: List[str], des: Union[str, os.PathLike]):
         
 
 def gen_urls (split: Union[str, List[str]], seg_id: Union[int, List[Union[List[int], int]]]):
-    base_url = 'gs://waymo_open_dataset_v_1_3_0/'
-
     urls = []
     if isinstance(split, str):
         if isinstance(seg_id, list):
