@@ -255,3 +255,50 @@ def extract_3d_seg_frames (path, txt_path):
                     timestamp = frame.timestamp_micros
                     write_string = f'{context},{timestamp}\n'
                     f.write(write_string)
+
+
+def show_labels_on_image (data):
+    """
+    Projects the labels from the Lidar range images onto the visual images
+    to show where on the visual images the Lidar labels are.
+    """
+    ri1_proj = data['ri1_proj']
+    ri2_proj = data['ri2_proj']
+    images = data['image']
+    H, W = images[1].shape[1], images[1].shape[2]
+    red_dot = np.array([0, 0, 255])  # 255 is the max pixel value
+    for cam_id in range(1, 6):
+        # Project main range lidar labels
+        col, row = ri1_proj[ri1_proj[...,  0]==cam_id][..., [1,2]].T
+        images[cam_id][:, row, col] = red_dot[:, np.newaxis]
+        print("Nr of points from first scan:", len(row))
+        print("Quotient:", len(row) / (H*W))
+        # Project secondary range lidar labels
+        col, row = ri2_proj[ri2_proj[...,  0]==cam_id][..., [1,2]].T
+        images[cam_id][:, row, col] = red_dot[:, np.newaxis]
+        print("Nr of points from second scan:", len(row))
+    
+    for i in range(1, 6):  # Goes through the 5 images
+        image = np.transpose(images[i], axes=(1, 2, 0))
+        fig = plt.figure(figsize=(W/20, H/20)) 
+        ax = fig.add_subplot(5, 1, i)
+        ax.imshow(image.astype('int'))
+        ax.set_title('Labels projected onto image nr ' + str(i))
+        ax.axis('off')
+        ax.title.set_fontsize(40)
+    plt.tight_layout()
+
+
+def plot_labeled_image(image):
+    """
+    Expect input image with shape (1, H, W)
+    First dim is for the class (int 0-28)
+    """
+    H, W = image.shape[1], image.shape[2]
+    image = np.transpose(image, axes=(1, 2, 0))
+    fig = plt.figure(figsize=(W/20, H/20)) 
+    plt.imshow()  # image.astype('int')
+    plt.set_title("Labels plotted over image")
+    plt.axis('off')
+    plt.title.set_fontsize(40)
+    plt.tight_layout()
