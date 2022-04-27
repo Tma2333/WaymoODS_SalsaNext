@@ -257,7 +257,7 @@ def extract_3d_seg_frames (path, txt_path):
                     f.write(write_string)
 
 
-def show_labels_on_image (data):
+def show_labels_on_image (data, alpha=0.5, dense_label=True, grid=8, stride=8, nan=-1):
     """
     Projects the labels from the Lidar range images onto the visual images
     to show where on the visual images the Lidar labels are.
@@ -266,39 +266,61 @@ def show_labels_on_image (data):
     ri2_proj = data['ri2_proj']
     images = data['image']
     H, W = images[1].shape[1], images[1].shape[2]
-    red_dot = np.array([0, 0, 255])  # 255 is the max pixel value
+    ri1_label = data['ri1_label']
+    ri2_label = data['ri2_label']
+    image_label = {}
+    densify_label = {}
     for cam_id in range(1, 6):
         # Project main range lidar labels
+        image_label[cam_id] = np.zeros((H, W)) + nan
         col, row = ri1_proj[ri1_proj[...,  0]==cam_id][..., [1,2]].T
-        images[cam_id][:, row, col] = red_dot[:, np.newaxis]
-        print("Nr of points from first scan:", len(row))
-        print("Quotient:", len(row) / (H*W))
+        image_label[cam_id][row, col]=ri1_label[ri1_proj[...,  0]==cam_id][:,1]
         # Project secondary range lidar labels
         col, row = ri2_proj[ri2_proj[...,  0]==cam_id][..., [1,2]].T
-        images[cam_id][:, row, col] = red_dot[:, np.newaxis]
-        print("Nr of points from second scan:", len(row))
+        image_label[cam_id][row, col] = ri2_label[ri2_proj[...,  0]==cam_id][:,1]
+
+        if dense_label:
+            densify_label[cam_id] = densify(image_label[cam_id], grid, stride, nan)
     
-    for i in range(1, 6):  # Goes through the 5 images
-        image = np.transpose(images[i], axes=(1, 2, 0))
-        fig = plt.figure(figsize=(W/20, H/20)) 
-        ax = fig.add_subplot(5, 1, i)
-        ax.imshow(image.astype('int'))
+    fig = plt.figure(figsize=(20, 35))
+    for i in range(1, 6):  # Goes through the 5 images\
+        if dense_label:
+            ax = fig.add_subplot(5, 2, i*2-1)
+        else:
+            ax = fig.add_subplot(5, 1, i)
+        ax.imshow(images[i].transpose(1,2,0))
+        ax.imshow(image_label[i], alpha=alpha, cmap='Paired')
         ax.set_title('Labels projected onto image nr ' + str(i))
         ax.axis('off')
-        ax.title.set_fontsize(40)
+        ax.title.set_fontsize(25)
+        if dense_label:
+            ax = fig.add_subplot(5, 2, i*2)
+            ax.imshow(images[i].transpose(1,2,0))
+            ax.imshow(densify_label[i], alpha=alpha, cmap='Paired')
+            ax.set_title('Densified Labels projected onto image nr ' + str(i))
+            ax.axis('off')
+            ax.title.set_fontsize(25)
     plt.tight_layout()
 
 
-def plot_labeled_image(image):
-    """
-    Expect input image with shape (1, H, W)
-    First dim is for the class (int 0-28)
-    """
-    H, W = image.shape[1], image.shape[2]
-    image = np.transpose(image, axes=(1, 2, 0))
-    fig = plt.figure(figsize=(W/20, H/20)) 
-    plt.imshow()  # image.astype('int')
-    plt.set_title("Labels plotted over image")
-    plt.axis('off')
-    plt.title.set_fontsize(40)
-    plt.tight_layout()
+
+def densify (x, grid=8, stride=8, nan=-1):
+    H, W = x.shape
+    stride = grid
+
+    uh = H - grid + 1
+    nh = (H - grid) // stride + 1
+    uw = W - grid + 1
+    nw = (W - grid) // stride + 1
+
+    hidx = np.repeat(np.arange(grid), grid)[np.newaxis, :] + np.repeat(np.arange(uh, step=stride), nw)[:,np.newaxis]
+    widx = np.tile(np.arange(grid), grid)[np.newaxis, :] + np.tile(np.arange(uw, step=stride), nh)[:,np.newaxis]
+
+    out = x[hidx, widx]
+    grid_max = np.max(out, 1)
+    grid_max = np.repeat(grid_max[:, np.newaxis], grid**2 ,axis=1)
+
+    im = np.zeros((H, W)) + nan
+    im[hidx, widx] = grid_max
+    
+    return im
