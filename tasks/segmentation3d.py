@@ -3,6 +3,8 @@ import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
 
+from data import H5Dataset
+
 
 class Segmentation3DTask(pl.LightningModule):
     """Standard interface for the trainer to interact with the model."""
@@ -30,6 +32,10 @@ class Segmentation3DTask(pl.LightningModule):
         raise NotImplementedError
 
 
+    def test_step(self, batch, batch_nb):
+        return self.validation_step(batch, batch_nb)
+
+
     def training_epoch_end(self, outputs):
         metric_keys = list(outputs[0].keys())
         for metric_key in metric_keys:
@@ -44,10 +50,6 @@ class Segmentation3DTask(pl.LightningModule):
             avg_val = sum(batch[metric_key] for batch in outputs) / len(outputs)
             tag = 'Val/epoch_avg_' + metric_key
             self.log(tag, avg_val, logger=True, sync_dist=True)
-            
-
-    def test_step(self, batch, batch_nb):
-        return self.validation_step(batch, batch_nb)
 
 
     def test_epoch_end(self, outputs):
@@ -60,24 +62,27 @@ class Segmentation3DTask(pl.LightningModule):
 
 
     def train_dataloader(self):
-        # TODO
-        raise NotImplementedError
-        data_loader = DataLoader(dataset, shuffle=True, batch_size=self.batch_size, num_workers=8)
+        h5_path = self.hparams['train_path']
+        key_to_load = self.hparams['key_to_load']
+        dataset = H5Dataset(h5_path, key_to_load, test=False)
+        data_loader = DataLoader(dataset, shuffle=True, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
         
         return data_loader
 
 
     def val_dataloader(self):
-        # TODO
-        raise NotImplementedError
-        data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=8)
+        h5_path = self.hparams['val_path']
+        key_to_load = self.hparams['key_to_load']
+        dataset = H5Dataset(h5_path, key_to_load, test=False)
+        data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
         
         return data_loader
 
 
     def test_dataloader(self):
-        # TODO
-        raise NotImplementedError
-        data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=8)
+        h5_path = self.hparams['test_path']
+        key_to_load = self.hparams['key_to_load']
+        dataset = H5Dataset(h5_path, key_to_load, test=True)
+        data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
         
         return data_loader

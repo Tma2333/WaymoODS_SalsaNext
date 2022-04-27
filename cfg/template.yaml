@@ -10,6 +10,16 @@ version: 0
 gpus: 4
 strategy: "ddp"
 
+# General setting - data parameter
+loader_worker: 8
+train_path: '/scr/data/h5/train.h5'
+val_path: '/scr/data/h5/validate.h5'
+test_path: '/scr/data/h5/test.h5'
+# Full set of keys you can use
+# ['range_image', 'image', 'ri1_range_image', 'ri2_range_image', 'ri1_label', 'ri2_label', 'ri1_proj', 'ri2_proj', 'proj_pixel']
+key_to_load: ['range_image', 'ri1_label']
+
+
 # General setting - training parameter
 batch_size: 90
 max_epochs: 2
