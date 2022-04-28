@@ -1,15 +1,15 @@
 # Setup Enviroment
 Make sure you have proper Nvidia Driver installed 
 
-This will create `3dseg` enviroment based on the dependencies file. This file could be update later.
+This will create `seg3d` enviroment based on the dependencies file. This file could be update later.
 ```
 conda env create -f environment.yml
-conda activate 3dseg
+conda activate seg3d
 ```
 
 Once finshed, install Waymo-Opendataset API using pip
 ```
-pip3 install waymo-open-dataset-tf-2-6-0 --user
+pip3 install waymo-open-dataset-tf-2-6-0
 ```
 
 # Download data

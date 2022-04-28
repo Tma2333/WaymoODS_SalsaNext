@@ -1,15 +1,18 @@
-name: 3dseg
+name: seg3d
 channels:
   - defaults
+  - pytorch
+  - conda-forge
 dependencies:
   - python=3.9
+  - torchvision
   - cudatoolkit=11.3
   - torchaudio
-  - torchvision
   - pytorch
-  - matplotlib
-  - ipykernel
   - pytorch-lightning
+  - matplotlib
   - seaborn
+  - ipykernel
   - scikit-learn
   - fire
+  - h5py

@@ -10,8 +10,8 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.plugins import DDPPlugin, DataParallelPlugin
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
-from util import init_exp_folder
-from task import get_task, oad_task,
+from utils import init_exp_folder
+from tasks import get_task, load_task
 
 def train(cfg):
     with open(str(cfg), 'r') as f:
