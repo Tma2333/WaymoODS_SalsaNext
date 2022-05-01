@@ -9,10 +9,11 @@ dependencies:
   - cudatoolkit=11.3
   - torchaudio
   - pytorch
-  - pytorch-lightning
+  - pytorch-lightning=1.6.2
   - matplotlib
   - seaborn
   - ipykernel
   - scikit-learn
   - fire
   - h5py
+  - torchmetrics
