@@ -24,9 +24,9 @@ def train(cfg):
 
     logger = TensorBoardLogger(args['save_dir'], name=args['exp_name'], version=args['version'])
 
-    ckpt_dir = Path(args['save_dir']) / args['exp_name'] / f'version_{args['version']}' / 'ckpt'
+    ckpt_dir = Path(args['save_dir']) / args['exp_name'] / f'version_{args["version"]}' / 'ckpt'
     ckpt_cb = ModelCheckpoint(dirpath=ckpt_dir, save_top_k=-1, 
-                              verbose=True, monitor=monitor, 
+                              verbose=True, monitor=args['monitor_metric'], 
                               mode=args['monitor_mode'], every_n_epochs=1)
 
     earlystop_cb = EarlyStopping(monitor=args['monitor_metric'], 

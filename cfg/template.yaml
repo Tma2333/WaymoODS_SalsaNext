@@ -20,6 +20,16 @@ test_path: '/scr/data/h5/test.h5'
 key_to_load: ['range_image', 'ri1_label']
 
 
+# General setting - model
+encoder:
+encoder_parm: {}
+
+decoder:
+decoder_parm: {}
+
+head:
+head_parm: {}
+
 # General setting - training parameter
 batch_size: 90
 max_epochs: 2
