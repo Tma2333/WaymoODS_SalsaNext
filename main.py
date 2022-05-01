@@ -6,11 +6,11 @@ import fire
 import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.plugins import DDPPlugin, DataParallelPlugin
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.strategies import DDPStrategy, DataParallelStrategy
+from pytorch_lightning.callbacks import (ModelCheckpoint, 
+                                         EarlyStopping, 
+                                         LearningRateMonitor)
 
-from utils import init_exp_folder
 from tasks import get_task, load_task
 
 def train(cfg):
@@ -25,7 +25,7 @@ def train(cfg):
     logger = TensorBoardLogger(args['save_dir'], name=args['exp_name'], version=args['version'])
 
     ckpt_dir = Path(args['save_dir']) / args['exp_name'] / f'version_{args["version"]}' / 'ckpt'
-    ckpt_cb = ModelCheckpoint(dirpath=ckpt_dir, save_top_k=-1, 
+    ckpt_cb = ModelCheckpoint(dirpath=ckpt_dir, save_top_k=args['save_top_k'], 
                               verbose=True, monitor=args['monitor_metric'], 
                               mode=args['monitor_mode'], every_n_epochs=1)
 
@@ -37,9 +37,9 @@ def train(cfg):
 
     if gpus == -1 or gpus > 1:
         if strategy == 'dp':
-            strategy = DataParallelPlugin()
+            strategy = DataParallelStrategy()
         if strategy == 'ddp':
-            strategy = DDPPlugin(find_unused_parameters=False)
+            strategy = DDPStrategy(find_unused_parameters=False)
     else:
         strategy = None
     
@@ -52,7 +52,7 @@ def train(cfg):
                       limit_train_batches=args['limit_train_batches'],
                       enable_model_summary = args['enable_model_summary'],
                       max_epochs=args['max_epochs'],
-                      log_every_n_steps=1)
+                      log_every_n_steps=25)
     trainer.fit(task)
 
 

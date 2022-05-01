@@ -1,4 +1,5 @@
 # Task
+# Available Task: [Segmentation3DTask]
 task: 'Segmentation3DTask'
 
 # General Setting - log path
@@ -7,11 +8,12 @@ save_dir: "PATH/TO/RESULT/DIR/"
 version: 0
 
 # General Setting - GPU
-gpus: 4
+gpus: 10
 strategy: "ddp"
 
 # General setting - data parameter
-loader_worker: 8
+num_cls: 23
+loader_worker: 16
 train_path: '/scr/data/h5/train.h5'
 val_path: '/scr/data/h5/validate.h5'
 test_path: '/scr/data/h5/test.h5'
@@ -19,21 +21,24 @@ test_path: '/scr/data/h5/test.h5'
 # ['range_image', 'image', 'ri1_range_image', 'ri2_range_image', 'ri1_label', 'ri2_label', 'ri1_proj', 'ri2_proj', 'proj_pixel']
 key_to_load: ['range_image', 'ri1_label']
 
-
 # General setting - model
-encoder:
-encoder_parm: {}
-
-decoder:
+# available encoder:
+# Salsa: {num_inchannel}
+encoder: Salsa
+encoder_parm: {num_inchannel: 6}
+# available decoder:
+# Salsa: {}
+decoder: Salsa
 decoder_parm: {}
-
-head:
-head_parm: {}
+# available head:
+# Salsa: {num_features, num_cls}
+head: Salsa
+head_parm: {num_features: 32, num_cls: 23}
 
 # General setting - training parameter
-batch_size: 90
+batch_size: 20
 max_epochs: 2
-learning_rate: 0
+learning_rate: 0.001
 
 # General setting - lightning specific 
 gradient_clip_val: 0.5
@@ -41,16 +46,15 @@ enable_model_summary: False
 limit_train_batches: 1.0
 # Metric to monitor for early stopping and ckpt saving
 # The following metric are always available:
-# ["Val/epoch_avg_loss", "Val/epoch_avg_accuracy", "Train/epoch_avg_loss", "Train/epoch_avg_accuracy"]
+# ["Val/epoch_avg_loss", "Val/epoch_avg_mIoU", "Train/epoch_avg_loss", "Train/epoch_avg_mIoU"]
 # Of course, there are some more metrics you can monitor or add your own to the train/eval step. 
-monitor_metric: "Val/epoch_avg_loss"
+monitor_metric: "Val/epoch_avg_mIoU"
 # The direction of above metric needs to go, i.e. min means you wish the metric go down
 # Choices: "min" or "max"
-monitor_mode: "min"
+monitor_mode: "max"
 # Only save top k epoch's ckpt for above metrics. 
 # Set to -1 if you wish to save every epoch. 
-save_top_k: -1
+save_top_k: 5
 # How many epoch the above metric did not change significantly to trigger the early stopping
 # You can set this equal to max_epochs to train for max_epochs 
 patience: 10
-monitor: "Val/epoch_avg_loss"

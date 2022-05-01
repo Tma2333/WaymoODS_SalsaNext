@@ -1,0 +1,42 @@
+# Task
+# Available Task: [Segmentation3DTask]
+task: 'Segmentation3DTask'
+
+# General Setting - log path
+exp_name: "salsa_next_initial"
+save_dir: "/deep2/u/yma42/files/results/seg3d"
+version: 2
+
+# General Setting - GPU
+gpus: 10
+strategy: "ddp"
+
+# General setting - data parameter
+num_cls: 23
+loader_worker: 16
+train_path: '/scr/data/h5/train.h5'
+val_path: '/scr/data/h5/validate.h5'
+test_path: '/scr/data/h5/test.h5'
+key_to_load: ['range_image', 'ri1_label']
+
+# General setting - model
+encoder: Salsa
+encoder_parm: {num_inchannel: 6}
+decoder: Salsa
+decoder_parm: {}
+head: Salsa
+head_parm: {num_features: 32, num_cls: 23}
+
+# General setting - training parameter
+batch_size: 5
+max_epochs: 200
+learning_rate: 0.001
+
+# General setting - lightning specific 
+gradient_clip_val: 0.5
+enable_model_summary: False
+limit_train_batches: 1.0
+monitor_metric: "Val/epoch_avg_mIoU"
+monitor_mode: "max"
+save_top_k: 5
+patience: 10
