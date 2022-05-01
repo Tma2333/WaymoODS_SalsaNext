@@ -1,5 +1,4 @@
 import io
-from multiprocessing.sharedctypes import Value
 from pathlib import Path
 
 from PIL import Image
@@ -100,53 +99,3 @@ class H5Dataset(torch.utils.data.Dataset):
                 else:
                     raise ValueError(f'{key} is not a valid key!')
         return data
-
-
-# class H5Dataset(torch.utils.data.Dataset):
-#     def __init__ (self, dataset_root_path, is_train, train_split=0.7, transforms=None):
-#         self.root = Path(dataset_root_path)
-#         self.data_path = self.root/'data.h5'
-#         self.metadata_path = self.root/'metadata.yaml'
-
-#         with open(self.metadata_path) as f:
-#             self.metadata = yaml.load(f, Loader=yaml.CLoader)
-        
-#         mean = []
-#         std = []
-#         for data_range in self.metadata['data_range']:
-#             mean.append((data_range[1]+data_range[0])/2)
-#             std.append((data_range[1]-data_range[0])/2)
-
-#         if transforms is None:
-#             self.transforms = []
-#         else:
-#             self.transforms = transforms
-#         self.transforms.append(T.ToTensor())
-#         self.transforms.append(T.ConvertImageDtype(torch.float))
-#         self.transforms.append(T.Normalize(mean, std))
-#         self.transforms = T.Compose(self.transforms)
-
-#         with h5py.File(str(self.data_path), 'r') as f:
-#             dataset_size = len(f['image'])
-
-#         if train_split < 1:
-#             if is_train:
-#                 self.length = int(dataset_size * train_split)
-#                 self.offset = 0
-#             else:
-#                 self.length = int(dataset_size - int(dataset_size * train_split))
-#                 self.offset = int(dataset_size * train_split)
-
-
-#     def __len__ (self):
-#         return self.length
-
-#     def __getitem__ (self, index):
-#         im_np = self._hdf5_loader(index+self.offset)
-#         return self.transforms(im_np)
-
-
-#     def _hdf5_loader (self, index):
-#         with h5py.File(str(self.data_path), 'r') as f:
-#             dset = f['image']
-#             return np.moveaxis(dset[index, ...], 0, -1)
