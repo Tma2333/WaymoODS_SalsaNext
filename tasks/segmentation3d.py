@@ -1,88 +1,59 @@
-import numpy as np
-import pytorch_lightning as pl
 import torch
-from torch.utils.data import DataLoader
+import torch.nn as nn
+from torchmetrics import JaccardIndex
 
-from data import H5Dataset
+from .base_task import BaseTask
+from models import SphericalSegmentation
 
-
-class Segmentation3DTask(pl.LightningModule):
-    """Standard interface for the trainer to interact with the model."""
-
+class Segmentation3DTask(BaseTask):
     def __init__(self, params):
-        super().__init__()
-        self.save_hyperparameters(params)
+        super().__init__(params)
 
-        self.batch_size = self.hparams['batch_size']
-        self.encoder = None
+        self.spherical_model = SphericalSegmentation(self.hparams)
+        
+        self.jaccard = JaccardIndex(num_classes=self.hparams['num_cls'])
 
+        self.criterion = nn.CrossEntropyLoss()
 
+    
     def forward(self, x):
-        # TODO
-        raise NotImplementedError
+        return self.spherical_model(x)
 
 
     def training_step(self, batch, batch_nb):
-        # TODO
-        raise NotImplementedError
+        input = batch['range_image']
+        label = batch['ri1_label'][:, 1, :].long()
 
+        out = self.forward(input)
+
+        loss = self.compute_loss(out, label)
+        
+        pred = out.argmax(dim=1)
+        mIoU = self.jaccard(pred, label)
+
+        self.log("Train/R0_mIoU", mIoU, logger=True, prog_bar=True, rank_zero_only=True)
+        self.log("Train/R0_loss", loss, logger=True, prog_bar=False, rank_zero_only=True)
+
+        return {"loss" : loss, "mIoU" : mIoU}
+
+
+    def compute_loss (self, out, label):
+        # out: [N, C, H, W]
+        # label: [N, H, W]
+        loss = self.criterion(out, label)
+        return loss
+        
 
     def validation_step(self, batch, batch_nb):
-        # TODO
-        raise NotImplementedError
+        input = batch['range_image']
+        label = batch['ri1_label'][:, 1, :].long()
 
+        out = self.forward(input)
 
-    def test_step(self, batch, batch_nb):
-        return self.validation_step(batch, batch_nb)
-
-
-    def training_epoch_end(self, outputs):
-        metric_keys = list(outputs[0].keys())
-        for metric_key in metric_keys:
-            avg_val = sum(batch[metric_key] for batch in outputs) / len(outputs)
-            tag = 'Train/epoch_avg_' + metric_key
-            self.log(tag, avg_val, logger=True, sync_dist=True)
-
-
-    def validation_epoch_end(self, outputs):
-        metric_keys = list(outputs[0].keys())
-        for metric_key in metric_keys:
-            avg_val = sum(batch[metric_key] for batch in outputs) / len(outputs)
-            tag = 'Val/epoch_avg_' + metric_key
-            self.log(tag, avg_val, logger=True, sync_dist=True)
-
-
-    def test_epoch_end(self, outputs):
-        return self.validation_epoch_end(outputs)
-
-
-    def configure_optimizers(self):
-        lr = self.hparams['learning_rate']
-        return [torch.optim.Adam(self.parameters(), lr=lr)]
-
-
-    def train_dataloader(self):
-        h5_path = self.hparams['train_path']
-        key_to_load = self.hparams['key_to_load']
-        dataset = H5Dataset(h5_path, key_to_load, test=False)
-        data_loader = DataLoader(dataset, shuffle=True, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
+        loss = self.compute_loss(out, label)
         
-        return data_loader
+        pred = out.argmax(dim=1)
+        mIoU = self.jaccard(pred, label)
 
+        return {"loss" : loss, "mIoU" : mIoU}
 
-    def val_dataloader(self):
-        h5_path = self.hparams['val_path']
-        key_to_load = self.hparams['key_to_load']
-        dataset = H5Dataset(h5_path, key_to_load, test=False)
-        data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
-        
-        return data_loader
-
-
-    def test_dataloader(self):
-        h5_path = self.hparams['test_path']
-        key_to_load = self.hparams['key_to_load']
-        dataset = H5Dataset(h5_path, key_to_load, test=True)
-        data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
-        
-        return data_loader

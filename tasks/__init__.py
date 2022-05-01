@@ -3,6 +3,7 @@ from collections import OrderedDict
 import torch
 
 from .segmentation3d import Segmentation3DTask
+from models import SphericalSegmentation
 
 
 def get_task(args):
@@ -34,5 +35,11 @@ def load_model(ckpt_path):
         if model not in model_state_dict:
             model_state_dict[model] = OrderedDict()
         model_state_dict[model][layer] = state.clone()
+    
+    model = {}
+    if 'spherical_model' in model_state_dict:
+        model['spherical_model'] = SphericalSegmentation(args)
+        model['spherical_model'].load_state_dict(model_state_dict['encoder'])
+        model['spherical_model'].eval()
     
     return model
