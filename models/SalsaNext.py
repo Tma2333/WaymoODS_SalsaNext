@@ -1,5 +1,5 @@
 # The following cod is reference from SalsaNext
-# https://github.com/Halmstad-University/SalsaNext/tree/a02fad97d646d4c132266ab79fbaea3ecfc237ed
+# https://github.com/Halmstad-University/SalsaNext
 
 import torch
 import torch.nn as nn
