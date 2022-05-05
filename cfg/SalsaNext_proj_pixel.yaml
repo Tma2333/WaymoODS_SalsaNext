@@ -3,9 +3,9 @@
 task: 'Segmentation3DTask'
 
 # General Setting - log path
-exp_name: "salsa_next_2d_initial"
-save_dir: "/deep2/u/yma42/files/results/seg2d"
-version: 2
+exp_name: "salsa_next_proj_initial"
+save_dir: "/deep2/u/yma42/files/results/seg3d"
+version: 0
 
 # General Setting - GPU
 gpus: 10
@@ -29,7 +29,7 @@ head_parm: {num_features: 32, num_cls: 23}
 
 # General setting - training parameter
 batch_size: 5
-max_epochs: 200
+max_epochs: 100
 learning_rate: 0.001
 
 # General setting - lightning specific 

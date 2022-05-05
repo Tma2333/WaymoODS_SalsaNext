@@ -5,7 +5,7 @@ task: 'Segmentation3DTask'
 # General Setting - log path
 exp_name: "salsa_next_initial"
 save_dir: "/deep2/u/yma42/files/results/seg3d"
-version: 2
+version: 3
 
 # General Setting - GPU
 gpus: 10
