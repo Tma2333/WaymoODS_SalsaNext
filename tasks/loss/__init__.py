@@ -1,1 +1,2 @@
 from .Lovasz_Softmax import Lovasz_softmax
+from .poly_loss import Poly1XentropyLoss, PolyNXentropyLoss, compute_poly_n_corss_entropy_loss

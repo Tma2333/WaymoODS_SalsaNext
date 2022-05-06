@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import torch
 
+from . import loss
 from .segmentation3d import Segmentation3DTask
 from models import SphericalSegmentation
 
