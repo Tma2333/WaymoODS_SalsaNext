@@ -13,3 +13,8 @@ class BaseDecoder (nn.Module):
 def get_salsa_decoder():
     from .SalsaNext import SalsaNextDecoder
     return SalsaNextDecoder()
+
+
+def get_squeeze_decoder():
+    from .SqueezeSegv3 import SqueezeSegDecoder
+    return SqueezeSegDecoder()
