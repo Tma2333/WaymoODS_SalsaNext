@@ -68,7 +68,7 @@ def gen_urls (split: Union[str, List[str]], seg_id: Union[int, List[Union[List[i
 
 def format_url (split: str, seg_id: int):
     check_param(split, seg_id)
-    base_url = 'gs://waymo_open_dataset_v_1_3_0/'
+    base_url = 'gs://waymo_open_dataset_v_1_3_2/archived_files/'
     url = base_url + f'{split}/{split}_{seg_id:04d}.tar'
     return url
 

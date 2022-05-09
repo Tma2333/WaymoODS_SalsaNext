@@ -35,10 +35,37 @@ decoder_parm: {}
 head: Salsa
 head_parm: {num_features: 32, num_cls: 23}
 
+# loss
+# Add Lovasz Softmax loss to Cross Entropy Loss
+lavasz_softmax: True
+# Use 1st order polynomial coefficient perturbation with eps=1
+poly1_Xentropy: True
+# CE + poly1_eps * (1-Pt)
+poly1_eps: 1
+# Use inverse class distribution to weight the 
+# class frequency in /docs/
+weighted_Xentropy: True
+# weight = 1 / (class_frequency + class_weight_eps)
+class_weight_eps: 0.001
+
+
 # General setting - training parameter
 batch_size: 20
 max_epochs: 2
-learning_rate: 0.001
+
+# lr warmup/decay
+# Maximum learning rate warmup to linearly
+# this must be greater than learning_rate
+learning_rate: 0
+peak_learning_rate: 0.001
+# The final learning rate the optimizer decay to after reaching peak_learning_rate
+# this should be smaller than peak_learning_rate
+final_learning_rate: 0.000001
+# Number of batch required to reach peak_learning_rate from start
+lr_warmup_batch: 500
+# Number of batch required to reach final_learning_rate after reach peak_learning_rate
+lr_decay_batch: 24000
+# For constant learning rate, you can set learning_rate = peak_learning_rate = final_learning_rate
 
 # General setting - lightning specific 
 gradient_clip_val: 0.5

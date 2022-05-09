@@ -1,0 +1,55 @@
+# Task
+# Available Task: [Segmentation3DTask]
+task: 'Segmentation3DTask'
+
+# General Setting - log path
+exp_name: "salsa_next_1.3.2_fuse"
+save_dir: "/deep2/u/yma42/files/results/seg3d"
+version: 0
+
+# General Setting - GPU
+gpus: 10
+strategy: "ddp"
+
+# General setting - data parameter
+num_cls: 23
+loader_worker: 16
+train_path: '/scr/data/h5/train.h5'
+val_path: '/scr/data/h5/validate.h5'
+test_path: '/scr/data/h5/test.h5'
+key_to_load: ['ri1_range_image', 'proj_pixel', 'ri1_label']
+
+# General setting - model
+encoder: Salsa
+encoder_parm: {num_inchannel: 6}
+decoder: Salsa
+decoder_parm: {}
+head: Salsa
+head_parm: {num_features: 32, num_cls: 23}
+
+# loss
+lavasz_softmax: True
+poly1_Xentropy: False
+poly1_eps: 0.5
+weighted_Xentropy: True
+class_weight_eps: 0.001
+
+# General setting - training parameter
+batch_size: 5
+max_epochs: 150
+
+# lr warmup/decay
+learning_rate: 0
+peak_learning_rate: 0.005
+final_learning_rate: 0.0000001
+lr_warmup_batch: 2500
+lr_decay_batch: 48000
+
+# General setting - lightning specific 
+gradient_clip_val: 0.5
+enable_model_summary: False
+limit_train_batches: 1.0
+monitor_metric: "Val/epoch_avg_mIoU"
+monitor_mode: "max"
+save_top_k: 5
+patience: 15

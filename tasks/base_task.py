@@ -56,7 +56,7 @@ class BaseTask(pl.LightningModule):
 
     def configure_optimizers(self):
         lr = self.hparams['learning_rate']
-        return [torch.optim.Adam(self.parameters(), lr=lr)]
+        return [torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=0.05)]
 
 
     def train_dataloader(self):
