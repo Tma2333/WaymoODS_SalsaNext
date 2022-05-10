@@ -57,6 +57,9 @@ class Segmentation3DTask(BaseTask):
             input = batch[self.input_key]
         label = batch[self.label_key][:, 1, :].long()
 
+        if self.use_proj_pixel:
+            label = self.mask_label_to_valid(input, label)
+
         out = self.forward(input)
 
         loss = self.compute_loss(out, label)
@@ -81,6 +84,9 @@ class Segmentation3DTask(BaseTask):
             input = batch[self.input_key]
         label = batch[self.label_key][:, 1, :].long()
 
+        if self.use_proj_pixel:
+            label = self.mask_label_to_valid(input, label)
+            
         out = self.forward(input)
 
         loss = self.compute_loss(out, label)

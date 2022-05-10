@@ -40,7 +40,7 @@ def load_model(ckpt_path):
     model = {}
     if 'spherical_model' in model_state_dict:
         model['spherical_model'] = SphericalSegmentation(args)
-        model['spherical_model'].load_state_dict(model_state_dict['encoder'])
+        model['spherical_model'].load_state_dict(model_state_dict['spherical_model'])
         model['spherical_model'].eval()
     
     return model

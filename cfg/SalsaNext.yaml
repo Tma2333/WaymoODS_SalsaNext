@@ -5,7 +5,7 @@ task: 'Segmentation3DTask'
 # General Setting - log path
 exp_name: "salsa_next_1.3.2_lidar"
 save_dir: "/deep2/u/yma42/files/results/seg3d"
-version: 0
+version: 1
 
 # General Setting - GPU
 gpus: 10
