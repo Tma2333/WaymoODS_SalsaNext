@@ -267,3 +267,60 @@ class SalsaNextHead (nn.Module):
         logits = F.softmax(logits, dim=1)
 
         return logits
+
+
+class SalsaNextEncoderCtxFusion (BaseEncoder):
+    def __init__ (self, num_lidar_channel, num_pixel_channel):
+        super().__init__()
+        self._forward_connection = ['context', 'layer1', 'layer2', 'layer3', 'layer4']
+
+        self.num_lidar_channel = num_lidar_channel
+        self.num_pixel_channel = num_pixel_channel
+
+        self.lidar_downCntx = ResContextBlock(num_lidar_channel, 16)
+        self.lidar_downCntx2 = ResContextBlock(16, 16)
+        self.lidar_downCntx3 = ResContextBlock(16, 16)
+
+        self.pixel_downCntx = ResContextBlock(num_pixel_channel, 16)
+        self.pixel_downCntx2 = ResContextBlock(16, 16)
+        self.pixel_downCntx3 = ResContextBlock(16, 16)
+
+        self.resBlock1 = ResBlock(32, 2 * 32, 0.2, pooling=True, drop_out=False)
+        self.resBlock2 = ResBlock(2 * 32, 2 * 2 * 32, 0.2, pooling=True)
+        self.resBlock3 = ResBlock(2 * 2 * 32, 2 * 4 * 32, 0.2, pooling=True)
+        self.resBlock4 = ResBlock(2 * 4 * 32, 2 * 4 * 32, 0.2, pooling=True)
+        self.resBlock5 = ResBlock(2 * 4 * 32, 2 * 4 * 32, 0.2, pooling=False)
+
+
+    def forward(self, x):
+        out = {}
+        lidar_x = x[:, :self.num_lidar_channel, :]
+        pixel_x = x[:, self.num_lidar_channel:, :]
+
+        lidar_Cntx = self.lidar_downCntx(lidar_x)
+        lidar_Cntx = self.lidar_downCntx2(lidar_Cntx)
+        lidar_Cntx = self.lidar_downCntx3(lidar_Cntx)
+
+        pixel_Cntx = self.pixel_downCntx(pixel_x)
+        pixel_Cntx = self.pixel_downCntx2(pixel_Cntx)
+        pixel_Cntx = self.pixel_downCntx3(pixel_Cntx)
+
+        downCntx = torch.cat((lidar_Cntx, pixel_Cntx), dim=1)
+    
+        down0c, down0b = self.resBlock1(downCntx)
+        out[self._forward_connection[1]] = down0b
+        down1c, down1b = self.resBlock2(down0c)
+        out[self._forward_connection[2]] = down1b
+        down2c, down2b = self.resBlock3(down1c)
+        out[self._forward_connection[3]] = down2b
+        down3c, down3b = self.resBlock4(down2c)
+        out[self._forward_connection[4]] = down3b
+        down5c = self.resBlock5(down3c)
+        out[self._forward_connection[0]] = down5c
+
+        return out
+
+
+    @property
+    def _connection(self):
+        return self._forward_connection
