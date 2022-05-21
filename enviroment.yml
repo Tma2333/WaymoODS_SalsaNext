@@ -17,3 +17,4 @@ dependencies:
   - fire
   - h5py
   - torchmetrics
+  - torchinfo
