@@ -2,6 +2,7 @@ import yaml
 import torch
 import torch.nn as nn
 from torchmetrics import JaccardIndex
+import numpy as np
 
 from .base_task import BaseTask
 from .utils import log_spherical_image_helper
@@ -41,6 +42,11 @@ class Segmentation3DTask(BaseTask):
         else:
             # output is a probability
             self.NLL = torch.nn.NLLLoss(weight=cls_weight, ignore_index=0)
+        
+        # cos anealing initialization
+        if self.hparams['decay_type'] == 'cos':
+            self.T0 = self.hparams['lr_decay_batch'] - self.hparams['lr_constant_batch']
+            self.T_restart = self.hparams['lr_constant_batch']
 
     
     def forward (self, x):
@@ -141,17 +147,35 @@ class Segmentation3DTask(BaseTask):
         peak_lr = self.hparams['peak_learning_rate']
         final_lr =  self.hparams['final_learning_rate']
         warmup_batch = self.hparams['lr_warmup_batch']
+        constant_batch = self.hparams['lr_constant_batch']
         decay_batch = self.hparams['lr_decay_batch']
+        decay_type = self.hparams['decay_type']
+        if decay_type == 'cos':
+            cos_decay_Tmult = self.hparams['cos_Tmult']
+
         # warm up
         if self.trainer.global_step < warmup_batch:
             scale = min(1.0, float(self.trainer.global_step + 1) / warmup_batch)
             for pg in optimizer.param_groups:
                 pg['lr'] = scale * peak_lr
-        # decay
-        elif warmup_batch <= self.trainer.global_step < decay_batch:
-            scale = min(1.0, float(((self.trainer.global_step + 1) - warmup_batch) / (decay_batch-warmup_batch)))
+        # constatnt
+        elif warmup_batch <= self.trainer.global_step < constant_batch:
+            for pg in optimizer.param_groups:
+                pg['lr'] = peak_lr
+        # linear decay
+        elif constant_batch <= self.trainer.global_step < decay_batch and decay_type == 'linear':
+            scale = min(1.0, float(((self.trainer.global_step + 1) - constant_batch) / (decay_batch-constant_batch)))
             for pg in optimizer.param_groups:
                 pg['lr'] = peak_lr + scale * (final_lr-peak_lr)
+        # cos anealing decay
+        elif constant_batch <= self.trainer.global_step and decay_type == 'cos':
+            Ti = self.trainer.global_step
+            if Ti - self.T_restart == self.T0:
+                self.T0 *= cos_decay_Tmult
+                self.T_restart = Ti
+            lr_cur = final_lr + (1/2)*(peak_lr - final_lr)*(1+np.cos(((Ti-self.T_restart)/self.T0)*np.pi))
+            for pg in optimizer.param_groups:
+                pg['lr'] = lr_cur
 
         optimizer.step(closure=optimizer_closure)
 
