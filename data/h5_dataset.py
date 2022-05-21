@@ -20,17 +20,29 @@ KEY_TO_H5PATH = {'ri1_range_image': '/range_image/ri1',
 
 class H5Dataset(torch.utils.data.Dataset):
     def __init__ (self, h5_path, data_key_list, test=False):
-        self.h5_path = Path(h5_path)
-
         if test and ('ri1_label' in data_key_list or 'ri2_label' in data_key_list):
             raise ValueError(f'Test set does not contain label.')
-
+        
         self.data_key_list = data_key_list
 
         self.to_tensor = T.ToTensor()
 
-        with h5py.File(str(self.h5_path), 'r') as f:
-            self.dataset_size = len(f['/range_image/ri1'])
+        if isinstance(h5_path, list):
+            self.multi_file = True
+            self.dataset_size = 0
+            self.offset = []
+            self.h5_path = []
+            for path in h5_path:
+                self.h5_path.append(Path(path))
+                with h5py.File(str(path), 'r') as f:
+                    self.offset.append(self.dataset_size)
+                    self.dataset_size += len(f['/range_image/ri1'])
+            self.offset = np.array(self.offset)
+        else:
+            self.multi_file = False
+            self.h5_path = Path(h5_path)
+            with h5py.File(str(self.h5_path), 'r') as f:
+                self.dataset_size = len(f['/range_image/ri1'])
 
 
     def __len__ (self):
@@ -38,7 +50,13 @@ class H5Dataset(torch.utils.data.Dataset):
 
 
     def __getitem__ (self, index):
-        return self.get_data(index)
+        if self.multi_file:
+            h5_index = np.sum(self.offset <= index)-1
+            sub_data_idx = index-self.offset[h5_index]
+            sub_h5_path = self.h5_path[h5_index]
+            return self.get_data(sub_h5_path, sub_data_idx)
+        else:
+            return self.get_data(self.h5_path, index)
     
 
     def norm_data (self, data, key):
@@ -66,9 +84,9 @@ class H5Dataset(torch.utils.data.Dataset):
             return torch.tensor(data)
 
 
-    def get_data (self, index):
+    def get_data (self, h5_path, index):
         data = {}
-        with h5py.File(str(self.h5_path), 'r') as f:
+        with h5py.File(str(h5_path), 'r') as f:
             for key in self.data_key_list:
                 if key == 'image':
                     data[key] = {}

@@ -79,7 +79,11 @@ class BaseTask(pl.LightningModule):
 
     def test_dataloader(self):
         h5_path = self.hparams['test_path']
-        key_to_load = self.hparams['key_to_load']
+        key_to_load = self.hparams['key_to_load'].copy()
+        if 'ri1_label' in key_to_load:
+            key_to_load.remove('ri1_label')
+        if 'ri2_label' in key_to_load:
+            key_to_load.remove('ri2_label')
         dataset = H5Dataset(h5_path, key_to_load, test=True)
         data_loader = DataLoader(dataset, shuffle=False, batch_size=self.batch_size, num_workers=self.hparams['loader_worker'])
         
