@@ -18,3 +18,8 @@ def get_salsa_decoder():
 def get_squeeze_decoder():
     from .SqueezeSegv3 import SqueezeSegDecoder
     return SqueezeSegDecoder()
+
+
+def get_convnext_decoder():
+    from .ConvNeXt import ConvNeXtDecoder
+    return ConvNeXtDecoder()

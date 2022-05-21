@@ -2,15 +2,21 @@ import torch.nn as nn
 
 from .encoder import (BaseEncoder,
                       get_salsa_encoder,
-                      get_squeeze_encoder)
+                      get_salsa_encoder_ctx_fusion,
+                      get_squeeze_encoder,
+                      get_convnext_encoder)
 from .decoder import (BaseDecoder,
                       get_salsa_decoder,
-                      get_squeeze_decoder)
+                      get_squeeze_decoder,
+                      get_convnext_decoder)
 from .head import get_salsa_head, get_squeeze_head
 
 
-_AVAILABLE_ENCODER = {'Salsa': get_salsa_encoder, "Squeeze": get_squeeze_encoder}
-_AVAILABLE_DECODER = {'Salsa': get_salsa_decoder, "Squeeze": get_squeeze_decoder}
+_AVAILABLE_ENCODER = {'Salsa': get_salsa_encoder, 'Squeeze': get_squeeze_encoder, 
+                       'SalsaCtxFusion': get_salsa_encoder_ctx_fusion,
+                       'ConvNeXt': get_convnext_encoder}
+_AVAILABLE_DECODER = {'Salsa': get_salsa_decoder, 'Squeeze': get_squeeze_decoder,
+                      'ConvNeXt':get_convnext_decoder}
 _AVAILABLE_HEAD = {'Salsa': get_salsa_head, "Squeeze": get_squeeze_head}
 
 
