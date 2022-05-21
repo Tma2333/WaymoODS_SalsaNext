@@ -43,7 +43,10 @@ learning_rate: 0
 peak_learning_rate: 0.005
 final_learning_rate: 0.0000001
 lr_warmup_batch: 2500
+lr_constant_batch: 2500
 lr_decay_batch: 48000
+decay_type: 'linear'
+cos_Tmult: 2
 
 # General setting - lightning specific 
 gradient_clip_val: 0.5

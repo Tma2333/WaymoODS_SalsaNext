@@ -3,9 +3,9 @@
 task: 'Segmentation3DTask'
 
 # General Setting - log path
-exp_name: "salsa_next_1.3.2_fuse"
+exp_name: "conv_next_1.3.2_lidar"
 save_dir: "/deep2/u/yma42/files/results/seg3d"
-version: 0
+version: 7
 
 # General Setting - GPU
 gpus: 10
@@ -17,12 +17,12 @@ loader_worker: 16
 train_path: '/scr/data/h5/train.h5'
 val_path: '/scr/data/h5/validate.h5'
 test_path: '/scr/data/h5/test.h5'
-key_to_load: ['ri1_range_image', 'proj_pixel', 'ri1_label']
+key_to_load: ['range_image', 'ri1_label']
 
 # General setting - model
-encoder: Salsa
+encoder: ConvNeXt
 encoder_parm: {num_inchannel: 6}
-decoder: Salsa
+decoder: ConvNeXt
 decoder_parm: {}
 head: Salsa
 head_parm: {num_features: 32, num_cls: 23}
@@ -35,17 +35,17 @@ weighted_Xentropy: True
 class_weight_eps: 0.001
 
 # General setting - training parameter
-batch_size: 5
-max_epochs: 150
+batch_size: 4
+max_epochs: 100
 
 # lr warmup/decay
-learning_rate: 0
+learning_rate: 0.005
 peak_learning_rate: 0.005
-final_learning_rate: 0.0000001
-lr_warmup_batch: 2500
-lr_constant_batch: 2500
-lr_decay_batch: 48000
-decay_type: 'linear'
+final_learning_rate: 0
+lr_warmup_batch: 2965
+lr_constant_batch: 2965
+lr_decay_batch: 59300
+decay_type: 'cos'
 cos_Tmult: 2
 
 # General setting - lightning specific 

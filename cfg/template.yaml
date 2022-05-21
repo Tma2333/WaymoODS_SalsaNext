@@ -61,11 +61,21 @@ peak_learning_rate: 0.001
 # The final learning rate the optimizer decay to after reaching peak_learning_rate
 # this should be smaller than peak_learning_rate
 final_learning_rate: 0.000001
-# Number of batch required to reach peak_learning_rate from start
+# batch number required to reach peak_learning_rate from start
 lr_warmup_batch: 500
-# Number of batch required to reach final_learning_rate after reach peak_learning_rate
+# batch number to keep at peak_learning_rate from 
+lr_constant_batch: 500
+# batch number required to reach final_learning_rate after reach peak_learning_rate
 lr_decay_batch: 24000
 # For constant learning rate, you can set learning_rate = peak_learning_rate = final_learning_rate
+# type of decay currently support cosine annealing and linear decay
+# cosine annealing perform after constant batch, and use difference between decay batch and constant batch
+# as Ti
+decay_type: 'linear'
+# Ti is multiply by cos_Tmult when it (current batch - batch restart) reach Ti
+# also batch restart initially set to lr_constant_batch then set to current batch when 
+# (current batch - batch restart) reach Ti
+cos_Tmult: 2
 
 # General setting - lightning specific 
 gradient_clip_val: 0.5

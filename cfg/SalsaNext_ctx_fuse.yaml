@@ -3,9 +3,9 @@
 task: 'Segmentation3DTask'
 
 # General Setting - log path
-exp_name: "salsa_next_1.3.2_fuse"
+exp_name: "salsa_next_1.3.2_ctx_fuse"
 save_dir: "/deep2/u/yma42/files/results/seg3d"
-version: 0
+version: 1
 
 # General Setting - GPU
 gpus: 10
@@ -20,8 +20,8 @@ test_path: '/scr/data/h5/test.h5'
 key_to_load: ['ri1_range_image', 'proj_pixel', 'ri1_label']
 
 # General setting - model
-encoder: Salsa
-encoder_parm: {num_inchannel: 6}
+encoder: SalsaCtxFusion
+encoder_parm: {num_lidar_channel: 3, num_pixel_channel: 3}
 decoder: Salsa
 decoder_parm: {}
 head: Salsa

@@ -5,7 +5,7 @@ task: 'Segmentation3DTask'
 # General Setting - log path
 exp_name: "salsa_next_1.3.2_lidar"
 save_dir: "/deep2/u/yma42/files/results/seg3d"
-version: 1
+version: 3
 
 # General Setting - GPU
 gpus: 10
@@ -30,20 +30,23 @@ head_parm: {num_features: 32, num_cls: 23}
 # loss
 lavasz_softmax: True
 poly1_Xentropy: False
-poly1_eps: 0.5
+poly1_eps: 0.1
 weighted_Xentropy: True
 class_weight_eps: 0.001
 
 # General setting - training parameter
 batch_size: 5
-max_epochs: 150
+max_epochs: 100
 
 # lr warmup/decay
 learning_rate: 0
-peak_learning_rate: 0.005
-final_learning_rate: 0.0000001
-lr_warmup_batch: 2500
-lr_decay_batch: 48000
+peak_learning_rate: 0.004
+final_learning_rate: 0
+lr_warmup_batch: 2370
+lr_constant_batch: 2370
+lr_decay_batch: 47400
+decay_type: 'cos'
+cos_Tmult: 2
 
 # General setting - lightning specific 
 gradient_clip_val: 0.5
