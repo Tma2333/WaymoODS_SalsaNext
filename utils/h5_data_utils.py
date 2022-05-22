@@ -4,6 +4,7 @@ import io
 import numpy as np
 from PIL import Image
 import h5py
+from sklearn.manifold import TSNE
 from tqdm import tqdm
 import tensorflow.compat.v1 as tf
 
@@ -83,7 +84,7 @@ def tfrecord_to_h5 (txt_path, h5_path, data_dir, test=False):
 
                 # read data
                 data = get_2d_seg_data(None, frame, test=test)
-                
+                                                    
                 if not test:
                     ri1_label = data['ri1_label']
                     ri2_label = data['ri2_label']
