@@ -1,0 +1,8 @@
+ckpt_lidar: '/deep2/u/yma42/files/results/seg3d/salsa_next_1.3.2_lidar/version_0/ckpt/epoch=110-step=52614.ckpt'
+ckpt_im: '/deep2/u/yma42/files/results/seg3d/salsa_next_1.3.2_projp/version_0/ckpt/epoch=110-step=52614.ckpt'
+h5_path: '/scr/data/h5/validate.h5' 
+device: 'cuda:0'
+batch_size: 20
+weight_lidar: 1.0
+weight_img: 0.0
+

@@ -12,6 +12,7 @@ from pytorch_lightning.callbacks import (ModelCheckpoint,
                                          LearningRateMonitor)
 
 from tasks import get_task, load_task
+from utils import late_fusion_naive_eval
 
 def train(cfg):
     with open(str(cfg), 'r') as f:
@@ -54,6 +55,27 @@ def train(cfg):
                       max_epochs=args['max_epochs'],
                       log_every_n_steps=25)
     trainer.fit(task)
+
+
+def late_fusion_eval (cfg):
+    with open(str(cfg), 'r') as f:
+        args = yaml.load(f, Loader = yaml.CLoader)
+
+    ckpt_lidar = args['ckpt_lidar']
+    ckpt_im = args['ckpt_im']
+    h5_path = args['h5_path']
+    device = args['device']
+    weight_lidar = args['weight_lidar']
+    weight_img = args['weight_img']
+    batch_size = args['batch_size']
+    print(f'WEIGHT lidar: {weight_lidar}, img: {weight_img}')
+
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    mean_mIoU_comb, mean_mIoU_lidar, mean_mIoU_diff = late_fusion_naive_eval(ckpt_lidar, ckpt_im, device, 
+                                                                            h5_path, batch_size, weight_lidar, weight_img)
+    print(f"fusion: {mean_mIoU_comb:.4f}, lidar: {mean_mIoU_lidar:.4f}, diff: {mean_mIoU_diff:.4f}")
 
 
 if __name__ == "__main__":
